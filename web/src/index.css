@@ -1,0 +1,17 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  padding: 2rem;
+}
+
+.simulated {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border: 2px solid currentColor;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
