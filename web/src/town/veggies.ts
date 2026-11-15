@@ -18,7 +18,7 @@ export const veggieFor: Record<Shape, Veggie> = {
 export const veggieFace: Record<Veggie, { y: number; z: number }> = {
   carrot: { y: 0.66, z: 0.22 },
   onion: { y: 0.42, z: 0.4 },
-  broccoli: { y: 0.33, z: 0.2 },
+  broccoli: { y: 0.27, z: 0.2 },
   eggplant: { y: 0.55, z: 0.36 },
   corn: { y: 0.55, z: 0.27 },
   pepper: { y: 0.42, z: 0.39 },

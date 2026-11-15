@@ -94,12 +94,46 @@ const layout: Record<Shape, Layout> = {
 
 const ink = "#1d2a33";
 
-function Eyes({ style }: { style: FaceStyle }) {
+const shine = "#ffffff";
+
+// Cartoon eyes for the vegetables: big whites, pupils looking ahead, and a
+// shine spot. Sleepy ones are half shut with a lid line instead of a pupil.
+function BigEye({ style }: { style: FaceStyle }) {
   return (
     <>
-      {[-0.09, 0.09].map((x) => (
-        <group key={x} position={[x, 0.05, 0]}>
-          {style === "sleepy" ? (
+      <mesh scale={[1, 1.2, 0.8]}>
+        <sphereGeometry args={[0.07, 24, 16]} />
+        <meshPhysicalMaterial color={shine} roughness={0.2} clearcoat={1} />
+      </mesh>
+      {style === "sleepy" ? (
+        <mesh position={[0, 0, 0.056]}>
+          <boxGeometry args={[0.13, 0.016, 0.01]} />
+          <meshStandardMaterial color={ink} />
+        </mesh>
+      ) : (
+        <>
+          <mesh position={[0, style === "o" ? 0.01 : -0.005, 0.05]}>
+            <sphereGeometry args={[style === "o" ? 0.022 : 0.03, 16, 8]} />
+            <meshStandardMaterial color={ink} />
+          </mesh>
+          <mesh position={[0.012, 0.012, 0.075]}>
+            <sphereGeometry args={[0.009, 8, 6]} />
+            <meshBasicMaterial color={shine} />
+          </mesh>
+        </>
+      )}
+    </>
+  );
+}
+
+function Eyes({ style, big }: { style: FaceStyle; big: boolean }) {
+  return (
+    <>
+      {(big ? [-0.075, 0.075] : [-0.09, 0.09]).map((x) => (
+        <group key={x} position={[x, big ? 0.07 : 0.05, 0]}>
+          {big ? (
+            <BigEye style={style} />
+          ) : style === "sleepy" ? (
             <mesh>
               <boxGeometry args={[0.07, 0.016, 0.02]} />
               <meshStandardMaterial color={ink} />
@@ -119,14 +153,18 @@ function Eyes({ style }: { style: FaceStyle }) {
 // Brow tilt: worried raises the inner ends, angry lowers them.
 const browTilt: Partial<Record<FaceStyle, number>> = { worried: 0.4, angry: -0.4 };
 
-function Brows({ style }: { style: FaceStyle }) {
+function Brows({ style, big }: { style: FaceStyle; big: boolean }) {
   const tilt = browTilt[style];
   if (tilt === undefined) return null;
   return (
     <>
       {[-1, 1].map((side) => (
         // side -1 is the left brow; its inner end is on the right (+x).
-        <mesh key={side} position={[side * 0.09, 0.13, 0]} rotation-z={-side * tilt}>
+        <mesh
+          key={side}
+          position={[side * (big ? 0.075 : 0.09), big ? 0.18 : 0.13, big ? 0.03 : 0]}
+          rotation-z={-side * tilt}
+        >
           <boxGeometry args={[0.085, 0.018, 0.02]} />
           <meshStandardMaterial color={ink} />
         </mesh>
@@ -214,8 +252,8 @@ export default function Resident({
         </mesh>
       )}
       <group position={[0, face_.y, face_.z]}>
-        <Brows style={face} />
-        <Eyes style={face} />
+        <Brows style={face} big={!!veggie} />
+        <Eyes style={face} big={!!veggie} />
         <group ref={mouthRef} position-y={mouthY}>
           <group position-y={-mouthY}>
             <Mouth style={face} />
