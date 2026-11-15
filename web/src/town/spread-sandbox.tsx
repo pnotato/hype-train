@@ -185,7 +185,8 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
   const [phase, setPhase] = useState<Phase>("idle");
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed] = useState(1);
-  const [contagion, setContagion] = useState(false);
+  const [contagion, setContagion] = useState(true);
+  const [showGrid, setShowGrid] = useState(true);
   const [selected, setSelected] = useState<number | null>(null);
   const homes = useMemo(() => layout.homes(sim.people.length), [layout, sim.people.length]);
   const [life, setLife] = useState(() => startLife(homes));
@@ -321,7 +322,7 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
         onPointerMissed={() => setSelected(null)}
       >
         {layout.scenery?.(sim.people)}
-        <HexGrid radius={layout.wanderRadius + hexStep} extra={homes} />
+        {showGrid && <HexGrid radius={layout.wanderRadius + hexStep} extra={homes} />}
         <CauseLinks links={chain} anchors={anchors} />
         {sim.people.map((p, i) => {
           const s = stages[i]!;
@@ -421,6 +422,10 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
         <label className="field">
           <input type="checkbox" checked={contagion} onChange={() => setContagion(!contagion)} />{" "}
           Contagion: anyone angry spreads it too
+        </label>
+        <label className="field">
+          <input type="checkbox" checked={showGrid} onChange={() => setShowGrid(!showGrid)} /> Show
+          hex grid
         </label>
         <p className="muted">
           Seed {seed} · turn {sim.turns.length}
