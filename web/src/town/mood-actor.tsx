@@ -11,7 +11,7 @@ import Resident from "./resident.tsx";
 // targets; useFrame eases toward them on refs. With reduced motion, faces and
 // colours still change and moves snap instead of easing.
 
-export type Pose = "idle" | "lean" | "recoil" | "tremble" | "shake" | "bounce" | "slump";
+export type Pose = "idle" | "lean" | "recoil" | "tremble" | "shake" | "bounce" | "slump" | "phone";
 
 const reducedMotion =
   typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -25,6 +25,7 @@ const base: Record<Pose, { rx: number; y: number }> = {
   shake: { rx: 0.1, y: 0 },
   bounce: { rx: 0.05, y: 0 },
   slump: { rx: 0.14, y: -0.03 },
+  phone: { rx: 0.22, y: 0 }, // head down, looking at the screen
 };
 
 function wobble(pose: Pose, t: number) {
@@ -34,7 +35,7 @@ function wobble(pose: Pose, t: number) {
     case "shake":
       return { rz: 0.06 * Math.sin(t * 32), y: 0.04 * Math.abs(Math.sin(t * 9)) };
     case "bounce":
-      return { rz: 0, y: 0.18 * Math.abs(Math.sin(t * 7)) };
+      return { rz: 0, y: 0.1 * Math.abs(Math.sin(t * 5)) };
     default:
       return { rz: 0, y: 0 };
   }
@@ -88,6 +89,9 @@ export default function MoodActor({
   const material = useRef<MeshStandardMaterial>(null);
   const mouth = useRef<Group>(null);
   const settled = useRef({ rx: 0, y: 0 });
+  // Moves ease in two stages (target → goal → body), so a walk starts gently
+  // instead of jumping to full speed.
+  const goal = useRef({ x: position[0], z: position[2] });
   // Walking hop: how much we're moving (0..1) and how far through the hop cycle.
   const hop = useRef({ moving: 0, phase: 0 });
   const target = useMemo(() => new Color(faceColour[face]), [face]);
@@ -104,8 +108,11 @@ export default function MoodActor({
     const r = root.current;
     let speed = 0;
     if (r) {
-      const dx = (position[0] - r.position.x) * k;
-      const dz = (position[2] - r.position.z) * k;
+      const to = goal.current;
+      to.x += (position[0] - to.x) * k;
+      to.z += (position[2] - to.z) * k;
+      const dx = (to.x - r.position.x) * k;
+      const dz = (to.z - r.position.z) * k;
       r.position.x += dx;
       r.position.z += dz;
       r.rotation.y += angleDelta(r.rotation.y, yaw) * k;
@@ -121,14 +128,15 @@ export default function MoodActor({
     // Squash and stretch while moving: hop along, stretching tall in the air
     // and squashing flat on landing. Width follows height to keep the volume.
     const h = hop.current;
-    h.moving = MathUtils.damp(h.moving, Math.min(speed / 1.5, 1), 10, delta);
-    h.phase += delta * (4 + 4 * h.moving) * Math.PI * h.moving;
+    // About 4 hops a second at full stride.
+    h.moving = MathUtils.damp(h.moving, Math.min(speed / 1.5, 1), 5, delta);
+    h.phase += delta * (2 + 2 * h.moving) * Math.PI * h.moving;
     const air = Math.abs(Math.sin(h.phase)); // 0 on the ground, 1 at the top
-    const sy = 1 + h.moving * (0.3 * air - 0.18 * (1 - air) ** 6);
+    const sy = 1 + h.moving * (0.22 * air - 0.12 * (1 - air) ** 4);
     const sx = 1 / Math.sqrt(sy);
     g.scale.set(sx, sy, sx);
     g.rotation.set(s.rx + 0.12 * h.moving, 0, w.rz);
-    g.position.y = s.y + w.y + h.moving * 0.25 * air;
+    g.position.y = s.y + w.y + h.moving * 0.28 * air;
     if (mouth.current) {
       const open = talking ? Math.abs(Math.sin(t * 13)) : 0;
       mouth.current.scale.set(1 - 0.2 * open, 1 + open, 1);
@@ -144,6 +152,7 @@ export default function MoodActor({
           face={face}
           materialRef={material}
           mouthRef={mouth}
+          phone={pose === "phone"}
         />
       </group>
       {talking && <SpeechBubble angry={face === "angry"} />}

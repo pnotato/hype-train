@@ -20,6 +20,7 @@ import {
   chatting,
   inDisc,
   lifeStep,
+  phoneChance,
   startLife,
   towards,
   yawTo,
@@ -38,15 +39,16 @@ import type { SandboxItem } from "./sandbox-rows.ts";
 // Third sandbox (?spread): 10 happy residents and one angry one, who
 // walks up to people and tries to make them angry. Each conversation's outcome
 // is a weighted random pick from the listener's traits (src/spread/sim.ts).
-// Between conversations everyone wanders and free pairs stop for a friendly
-// chat (src/spread/life.ts); only the sim changes moods.
+// Between conversations everyone wanders, free pairs stop for a friendly chat
+// and some check their phone, introverts most (src/spread/life.ts); only the
+// sim changes moods.
 // The same sim also drives the town page, which swaps in a different layout
 // (where everyone lives) and scenery.
 // ponytail: a browser-side prototype; the real sim runs in Go and the UI only
 // replays its log (CLAUDE.md rule 4).
 
 const approach = 1.1; // how close the speaker stands to the listener
-const seconds = { walk: 1, talk: 1.2, react: 1.3 };
+const seconds = { walk: 1.4, talk: 1.2, react: 1.3 };
 const maxTurns = 60;
 
 type Phase = "idle" | "walk" | "talk" | "react";
@@ -104,7 +106,7 @@ function stage(sim: SimState, turn: Turn | undefined, phase: Phase, life: Life):
       position: w.pos,
       yaw: w.yaw,
       mood: p.mood,
-      pose: w.walking ? "bounce" : talking ? "lean" : "idle",
+      pose: w.walking ? "bounce" : talking ? "lean" : w.phone !== null ? "phone" : "idle",
       talking,
       walking: w.walking,
     };
@@ -208,7 +210,7 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
     const id = setTimeout(() => {
       const rng = lifeRng.current;
       const wander = (i: number) => (rng() < 0.3 ? homes[i]! : inDisc(layout.wanderRadius, rng));
-      setLife((l) => lifeStep(l, busy, wander, rng));
+      setLife((l) => lifeStep(l, busy, wander, (i) => sim.people[i]!.traits.sociability, rng));
     }, 1000 / speed);
     return () => clearTimeout(id);
     // busy and homes follow from sim and phase; life covers the tick.
@@ -324,7 +326,7 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
                 pose={s.pose}
                 talking={s.talking}
                 // Strolls are slower than walking up to someone.
-                walkSpeed={(s.walking && !busy.has(i) ? 2 : 4) * speed}
+                walkSpeed={(s.walking && !busy.has(i) ? 1.6 : 3.5) * speed}
               >
                 {/* The one who started angry wears a red ring. */}
                 {p.spreader && (
@@ -475,6 +477,11 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
         </ul>
         <p className="muted">
           Levels count low 0, mid 1, high 2. Sociable residents are approached more often.
+        </p>
+        <p className="muted">
+          Between conversations, free residents may check their phone instead of chatting. Chance
+          per second by sociability: low {pct(phoneChance.low)}, mid {pct(phoneChance.mid)}, high{" "}
+          {pct(phoneChance.high)}.
         </p>
 
         <h3>Log</h3>

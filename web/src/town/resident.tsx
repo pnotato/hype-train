@@ -218,7 +218,25 @@ type Props = {
   // For animation: the body material (to fade colour) and the mouth (to flap).
   materialRef?: Ref<MeshStandardMaterial>;
   mouthRef?: Ref<Group>;
+  phone?: boolean; // holding a phone below the face, screen up
 };
+
+// A phone held just under the face, lying nearly flat with the lit screen
+// tipped toward the face, so it reads from the raised camera.
+function Phone() {
+  return (
+    <group position={[0, -0.16, 0.14]} rotation-x={-1.83}>
+      <mesh>
+        <boxGeometry args={[0.15, 0.24, 0.025]} />
+        <meshStandardMaterial color="#1d2a33" />
+      </mesh>
+      <mesh position-z={0.014}>
+        <planeGeometry args={[0.12, 0.2]} />
+        <meshBasicMaterial color="#9fe3ff" />
+      </mesh>
+    </group>
+  );
+}
 
 // Pivot for mouth animation, at the middle of the mouth.
 const mouthY = -0.06;
@@ -230,6 +248,7 @@ export default function Resident({
   position = [0, 0, 0],
   materialRef,
   mouthRef,
+  phone = false,
 }: Props) {
   const l = layout[shape];
   const veggie = veggies ? veggieFor[shape] : undefined;
@@ -259,6 +278,7 @@ export default function Resident({
             <Mouth style={face} />
           </group>
         </group>
+        {phone && <Phone />}
       </group>
     </group>
   );
