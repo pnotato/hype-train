@@ -5,7 +5,14 @@ import TownScene from "./town/town-scene.tsx";
 
 // ?shapes and ?spread open the sandboxes instead of the town.
 const params = new URLSearchParams(location.search);
-const page = params.has("shapes") ? "shapes" : params.has("spread") ? "spread" : "town";
+// ?veggies is the town with vegetable residents (town/veggie.tsx).
+const page = params.has("shapes")
+  ? "shapes"
+  : params.has("spread")
+    ? "spread"
+    : params.has("veggies")
+      ? "veggies"
+      : "town";
 
 type Health = { status: string; brain: string };
 
@@ -37,6 +44,9 @@ export default function App() {
           </a>
           <a href="/?spread" aria-current={page === "spread" ? "page" : undefined}>
             Spread
+          </a>
+          <a href="/?veggies" aria-current={page === "veggies" ? "page" : undefined}>
+            Veggies
           </a>
         </nav>
       </main>

@@ -9,6 +9,11 @@ import {
 } from "three";
 import type { Shape } from "../visual/personality.ts";
 import type { FaceStyle } from "./faces.ts";
+import { VeggieBody } from "./veggie.tsx";
+import { veggieFace, veggieFor } from "./veggies.ts";
+
+// ?veggies swaps the plain shapes for vegetables (veggie.tsx).
+const veggies = new URLSearchParams(location.search).has("veggies");
 
 // A resident: a body in their archetype's shape with a face on the front (+z).
 // Every body is about one world unit tall and stands on y = 0.
@@ -189,13 +194,26 @@ export default function Resident({
   mouthRef,
 }: Props) {
   const l = layout[shape];
+  const veggie = veggies ? veggieFor[shape] : undefined;
+  const face_ = veggie ? veggieFace[veggie] : { y: l.faceY, z: l.faceZ };
   return (
     <group position={position}>
-      <mesh castShadow position-y={l.bodyY}>
-        <Body shape={shape} />
-        <meshStandardMaterial ref={materialRef} color={colour} />
-      </mesh>
-      <group position={[0, l.faceY, l.faceZ]}>
+      {veggie ? (
+        <>
+          <VeggieBody veggie={veggie} />
+          {/* Vegetables keep their own colours, so mood colour sits underfoot. */}
+          <mesh rotation-x={-Math.PI / 2} position-y={0.015}>
+            <circleGeometry args={[0.45, 32]} />
+            <meshStandardMaterial ref={materialRef} color={colour} />
+          </mesh>
+        </>
+      ) : (
+        <mesh castShadow position-y={l.bodyY}>
+          <Body shape={shape} />
+          <meshStandardMaterial ref={materialRef} color={colour} />
+        </mesh>
+      )}
+      <group position={[0, face_.y, face_.z]}>
         <Brows style={face} />
         <Eyes style={face} />
         <group ref={mouthRef} position-y={mouthY}>
