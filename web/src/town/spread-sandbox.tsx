@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
+  causeChain,
   initialState,
   interactions,
   makeRng,
+  moodHistory,
   moods,
   outcomes,
   probabilities,
@@ -25,6 +27,8 @@ import {
   type Vec,
 } from "../spread/life.ts";
 import { archetypeLabel, archetypes, shapeFor, type Archetype } from "../visual/personality.ts";
+import type { Object3D } from "three";
+import CauseLinks from "./cause-links.tsx";
 import { faceColour, type FaceStyle } from "./faces.ts";
 import MoodActor, { type Pose } from "./mood-actor.tsx";
 import ResidentDock from "./resident-dock.tsx";
@@ -246,6 +250,19 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
   ) as Record<Mood, number>;
   const person = selected === null ? undefined : sim.people[selected];
 
+  // The selected resident's past: mood changes, and the chain of people whose
+  // bad moods led to theirs. A conversation still playing out doesn't count yet.
+  const upTo = turn && (phase === "walk" || phase === "talk") ? turn.turn : Infinity;
+  const chain = selected === null ? [] : causeChain(sim.links, selected, upTo);
+  const inChain = new Set(chain.flatMap((l) => [l.parent, l.child]));
+  const history = selected === null ? [] : moodHistory(sim.turns, selected, upTo);
+  const anchors = useRef<(Object3D | null)[]>([]);
+  const name = (i: number) => (
+    <button type="button" className="link" onClick={() => setSelected(i)}>
+      {sim.people[i]!.name}
+    </button>
+  );
+
   // The shared bottom-left dock shows the selected resident as they look now.
   const dockItem = (i: number | null | undefined): SandboxItem | undefined => {
     if (i === null || i === undefined) return undefined;
@@ -281,6 +298,7 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
         onPointerMissed={() => setSelected(null)}
       >
         {layout.scenery?.(sim.people)}
+        <CauseLinks links={chain} anchors={anchors} />
         {sim.people.map((p, i) => {
           const s = stages[i]!;
           return (
@@ -315,12 +333,18 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
                     <meshBasicMaterial color={faceColour.angry} />
                   </mesh>
                 )}
-                {selected === i && (
+                {/* Selected: white ring. Others in their cause chain: red ring. */}
+                {(selected === i || inChain.has(i)) && (
                   <mesh rotation-x={-Math.PI / 2} position-y={0.02}>
                     <ringGeometry args={[0.62, 0.72, 48]} />
-                    <meshBasicMaterial color="white" />
+                    <meshBasicMaterial color={selected === i ? "white" : faceColour.angry} />
                   </mesh>
                 )}
+                <group
+                  ref={(g) => {
+                    anchors.current[i] = g;
+                  }}
+                />
               </MoodActor>
             </group>
           );
@@ -388,8 +412,41 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
           ))}
         </ul>
 
-        {person ? (
+        {person && selected !== null ? (
           <>
+            <h3>
+              How {person.name} got {stages[selected]!.mood}
+            </h3>
+            {chain.length ? (
+              <ol className="log">
+                {chain.map((l) => (
+                  <li key={l.turn}>
+                    Turn {l.turn}: {name(l.parent)} → {name(l.child)}{" "}
+                    <span className="muted">
+                      ({l.from} → {l.to})
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="muted">
+                {person.spreader
+                  ? "They started it: nobody made them angry."
+                  : "Nobody has made their mood worse."}
+              </p>
+            )}
+
+            <h3>Mood history</h3>
+            <ol className="log">
+              <li>Started {person.spreader ? "angry" : "happy"}</li>
+              {history.map((h) => (
+                <li key={h.turn}>
+                  Turn {h.turn}: {h.from} → {h.to}, {interactions[h.outcome].label.toLowerCase()}{" "}
+                  with {name(h.by)}
+                </li>
+              ))}
+            </ol>
+
             <h3>If an angry resident confronts {person.name}</h3>
             <ul className="interactions">
               {(() => {

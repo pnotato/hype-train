@@ -266,3 +266,15 @@ body,
 .dock-talking button:hover {
   background: #d3e7f6;
 }
+
+/* An inline button that reads as a name link. */
+.sandbox-panel button.link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

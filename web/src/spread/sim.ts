@@ -124,7 +124,12 @@ export type Turn = {
   listenerMood: [Mood, Mood];
 };
 
-export type SimState = { people: Person[]; turns: Turn[]; done: string | null };
+// Parent → child: on this turn, `parent` made `child`'s mood worse. Following
+// a child's latest link back, then the parent's latest link before that, and
+// so on, gives the chain of people that led to their mood.
+export type Link = { turn: number; parent: number; child: number; from: Mood; to: Mood };
+
+export type SimState = { people: Person[]; turns: Turn[]; links: Link[]; done: string | null };
 
 export type Options = { contagion: boolean; maxTurns: number };
 
@@ -161,6 +166,7 @@ export function initialState(spreader: Archetype, rng: Rng): SimState {
   return {
     people: [make(spreader, 0, "angry"), ...pool.map((a, i) => make(a, i + 1, "happy"))],
     turns: [],
+    links: [],
     done: null,
   };
 }
@@ -223,5 +229,43 @@ export function step(s: SimState, rng: Rng, opts: Options): SimState {
     speakerMood: [sp.mood, speakerAfter],
     listenerMood: [li.mood, listenerAfter],
   };
-  return { people, turns: [...s.turns, turn], done: null };
+  const worse = moods.indexOf(listenerAfter) > moods.indexOf(li.mood);
+  const links = worse
+    ? [
+        ...s.links,
+        { turn: turn.turn, parent: speaker, child: listener, from: li.mood, to: listenerAfter },
+      ]
+    : s.links;
+  return { people, turns: [...s.turns, turn], links, done: null };
+}
+
+// The chain that led to `child`'s mood, root first: who worsened them last,
+// who worsened that person before then, and so on. Only links before turn
+// `upTo` count, so an unfinished conversation isn't shown early.
+export function causeChain(links: readonly Link[], child: number, upTo = Infinity): Link[] {
+  const chain: Link[] = [];
+  let who = child;
+  let before = upTo;
+  for (;;) {
+    const link = links.findLast((l) => l.child === who && l.turn < before);
+    if (!link) return chain.reverse();
+    chain.push(link);
+    who = link.parent;
+    before = link.turn;
+  }
+}
+
+// Every mood change for person i before turn `upTo`, oldest first.
+export type MoodChange = { turn: number; from: Mood; to: Mood; by: number; outcome: Outcome };
+
+export function moodHistory(turns: readonly Turn[], i: number, upTo = Infinity): MoodChange[] {
+  return turns.flatMap((t): MoodChange[] => {
+    if (t.turn >= upTo) return [];
+    const [from, to] =
+      t.listener === i ? t.listenerMood : t.speaker === i ? t.speakerMood : [null, null];
+    if (from === null || from === to) return [];
+    return [
+      { turn: t.turn, from, to, by: t.listener === i ? t.speaker : t.listener, outcome: t.outcome },
+    ];
+  });
 }
