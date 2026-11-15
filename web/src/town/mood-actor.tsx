@@ -88,6 +88,8 @@ export default function MoodActor({
   const material = useRef<MeshStandardMaterial>(null);
   const mouth = useRef<Group>(null);
   const settled = useRef({ rx: 0, y: 0 });
+  // Walking hop: how much we're moving (0..1) and how far through the hop cycle.
+  const hop = useRef({ moving: 0, phase: 0 });
   const target = useMemo(() => new Color(faceColour[face]), [face]);
   // Start where and how we first appear; after that, props are only targets.
   const [start] = useState(() => ({ position, yaw, colour: faceColour[face] }));
@@ -100,10 +102,14 @@ export default function MoodActor({
     if (m) m.color.lerp(target, reducedMotion ? 1 : 1 - Math.exp(-delta * 4));
 
     const r = root.current;
+    let speed = 0;
     if (r) {
-      r.position.x += (position[0] - r.position.x) * k;
-      r.position.z += (position[2] - r.position.z) * k;
+      const dx = (position[0] - r.position.x) * k;
+      const dz = (position[2] - r.position.z) * k;
+      r.position.x += dx;
+      r.position.z += dz;
       r.rotation.y += angleDelta(r.rotation.y, yaw) * k;
+      speed = delta > 0 ? Math.hypot(dx, dz) / delta : 0;
     }
 
     const g = body.current;
@@ -112,8 +118,17 @@ export default function MoodActor({
     s.rx = MathUtils.damp(s.rx, base[pose].rx, 8, delta);
     s.y = MathUtils.damp(s.y, base[pose].y, 8, delta);
     const w = wobble(pose, t);
-    g.rotation.set(s.rx, 0, w.rz);
-    g.position.y = s.y + w.y;
+    // Squash and stretch while moving: hop along, stretching tall in the air
+    // and squashing flat on landing. Width follows height to keep the volume.
+    const h = hop.current;
+    h.moving = MathUtils.damp(h.moving, Math.min(speed / 1.5, 1), 10, delta);
+    h.phase += delta * (4 + 4 * h.moving) * Math.PI * h.moving;
+    const air = Math.abs(Math.sin(h.phase)); // 0 on the ground, 1 at the top
+    const sy = 1 + h.moving * (0.3 * air - 0.18 * (1 - air) ** 6);
+    const sx = 1 / Math.sqrt(sy);
+    g.scale.set(sx, sy, sx);
+    g.rotation.set(s.rx + 0.12 * h.moving, 0, w.rz);
+    g.position.y = s.y + w.y + h.moving * 0.25 * air;
     if (mouth.current) {
       const open = talking ? Math.abs(Math.sin(t * 13)) : 0;
       mouth.current.scale.set(1 - 0.2 * open, 1 + open, 1);
