@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { faces } from "./town/faces.ts";
 import ShapeSandbox from "./town/shape-sandbox.tsx";
-import { archetypeLabel, archetypes, shapeFor } from "./visual/personality.ts";
+import SpreadSandbox from "./town/spread-sandbox.tsx";
 import TownScene from "./town/town-scene.tsx";
 
-// ?shapes opens the shape sandbox instead of the town.
-const sandbox = new URLSearchParams(location.search).has("shapes");
+// ?shapes and ?spread open the sandboxes instead of the town.
+const params = new URLSearchParams(location.search);
+const page = params.has("shapes") ? "shapes" : params.has("spread") ? "spread" : "town";
 
 type Health = { status: string; brain: string };
 
@@ -21,31 +21,24 @@ export default function App() {
 
   return (
     <>
-      {sandbox ? <ShapeSandbox /> : <TownScene />}
+      {page === "shapes" ? <ShapeSandbox /> : page === "spread" ? <SpreadSandbox /> : <TownScene />}
       <main className="overlay">
         <span className="simulated">SIMULATED</span>
         <p>
           Server:{" "}
           {typeof health === "string" ? health : `${health.status} (brain: ${health.brain})`}
         </p>
-        {sandbox && (
-          <div className="legend">
-            <p>Front row, left to right:</p>
-            <ol>
-              {archetypes.map((a) => (
-                <li key={a}>
-                  {archetypeLabel[a]}: {shapeFor[a]}
-                </li>
-              ))}
-            </ol>
-            <p>Back row: faces, happiest to least happy:</p>
-            <ol>
-              {faces.map((f) => (
-                <li key={f}>{f}</li>
-              ))}
-            </ol>
-          </div>
-        )}
+        <nav className="pages" aria-label="Pages">
+          <a href="/" aria-current={page === "town" ? "page" : undefined}>
+            Town
+          </a>
+          <a href="/?shapes" aria-current={page === "shapes" ? "page" : undefined}>
+            Shapes
+          </a>
+          <a href="/?spread" aria-current={page === "spread" ? "page" : undefined}>
+            Spread
+          </a>
+        </nav>
       </main>
     </>
   );

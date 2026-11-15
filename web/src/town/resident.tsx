@@ -1,4 +1,12 @@
-import { ExtrudeGeometry, LatheGeometry, Shape as Path2D, Vector2 } from "three";
+import type { Ref } from "react";
+import {
+  ExtrudeGeometry,
+  LatheGeometry,
+  Shape as Path2D,
+  Vector2,
+  type Group,
+  type MeshStandardMaterial,
+} from "three";
 import type { Shape } from "../visual/personality.ts";
 import type { FaceStyle } from "./faces.ts";
 
@@ -164,20 +172,37 @@ type Props = {
   colour: string;
   face?: FaceStyle;
   position?: [number, number, number];
+  // For animation: the body material (to fade colour) and the mouth (to flap).
+  materialRef?: Ref<MeshStandardMaterial>;
+  mouthRef?: Ref<Group>;
 };
 
-export default function Resident({ shape, colour, face = "smile", position = [0, 0, 0] }: Props) {
+// Pivot for mouth animation, at the middle of the mouth.
+const mouthY = -0.06;
+
+export default function Resident({
+  shape,
+  colour,
+  face = "smile",
+  position = [0, 0, 0],
+  materialRef,
+  mouthRef,
+}: Props) {
   const l = layout[shape];
   return (
     <group position={position}>
       <mesh castShadow position-y={l.bodyY}>
         <Body shape={shape} />
-        <meshStandardMaterial color={colour} />
+        <meshStandardMaterial ref={materialRef} color={colour} />
       </mesh>
       <group position={[0, l.faceY, l.faceZ]}>
         <Brows style={face} />
         <Eyes style={face} />
-        <Mouth style={face} />
+        <group ref={mouthRef} position-y={mouthY}>
+          <group position-y={-mouthY}>
+            <Mouth style={face} />
+          </group>
+        </group>
       </group>
     </group>
   );

@@ -37,13 +37,232 @@ body,
   letter-spacing: 0.1em;
 }
 
-.legend {
-  margin-top: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: rgb(255 255 255 / 0.7);
+/* Shape sandbox: toggles, top right. */
+.sandbox-panel {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 17rem;
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+  background: rgb(255 255 255 / 0.85);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
 }
 
-.legend ol {
-  margin: 0.25rem 0 0.5rem;
-  padding-left: 1.5rem;
+.sandbox-panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.sandbox-panel p {
+  margin: 0;
+}
+
+.sandbox-panel .hint {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgb(0 0 0 / 0.15);
+}
+
+.sandbox-panel fieldset {
+  border: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.sandbox-panel legend {
+  font-weight: 700;
+}
+
+.sandbox-panel ul {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.sandbox-panel li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sandbox-panel button {
+  border: none;
+  background: none;
+  padding: 0.1rem 0.25rem;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+
+.sandbox-panel button:hover {
+  background: rgb(0 0 0 / 0.06);
+}
+
+.sandbox-panel button[aria-pressed="true"] {
+  background: #1d2a33;
+  color: white;
+}
+
+/* Selected-character dock, bottom left: round portrait overlapping a panel. */
+.resident-dock {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.resident-dock > * {
+  pointer-events: auto;
+}
+
+.dock-portrait {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 9rem;
+  height: 9rem;
+  border: 4px solid white;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #eaf4fb, #a9c9de);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+}
+
+.dock-panel {
+  margin-left: -2.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem 1.25rem 0.75rem 3.5rem;
+  background: rgb(255 255 255 / 0.9);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+  font-size: 0.9rem;
+}
+
+.dock-panel h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+}
+
+/* Traits as a compact two-row grid of label/value cells. */
+.dock-panel dl {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, auto);
+  gap: 0.3rem 1.25rem;
+  margin: 0;
+}
+
+.dock-panel dt {
+  color: #5b6770;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dock-panel dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.pages {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.pages a {
+  color: inherit;
+}
+
+.pages a[aria-current="page"] {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sandbox-panel h3 {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.sandbox-panel .controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.sandbox-panel .controls button {
+  border: 1px solid #1d2a33;
+  background: white;
+}
+
+.sandbox-panel .controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sandbox-panel .field {
+  display: block;
+  margin: 0.25rem 0;
+}
+
+.sandbox-panel .muted {
+  color: #5b6770;
+  font-size: 0.8rem;
+}
+
+.sandbox-panel .tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.sandbox-panel .tally li {
+  gap: 0.3rem;
+}
+
+.chip {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+}
+
+.sandbox-panel .interactions,
+.sandbox-panel .log {
+  padding-left: 1.25rem;
+  list-style: revert;
+}
+
+.sandbox-panel .interactions li,
+.sandbox-panel .log li {
+  display: list-item;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.dock-talking {
+  margin: 0 0 0.5rem;
+}
+
+.dock-talking button {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid #4a8fd9;
+  border-radius: 1rem;
+  background: #eaf4fb;
+  font: inherit;
+  font-weight: 600;
+  color: #1d2a33;
+  cursor: pointer;
+}
+
+.dock-talking button:hover {
+  background: #d3e7f6;
 }
