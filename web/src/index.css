@@ -1,17 +1,49 @@
 :root {
   font-family: system-ui, sans-serif;
-  color-scheme: light dark;
+  color: #1d2a33;
 }
 
-body {
+html,
+body,
+#root {
+  height: 100%;
   margin: 0;
-  padding: 2rem;
+  overflow: hidden;
+}
+
+/* HTML overlay on top of the 3D canvas. Lets drags fall through to the camera. */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1rem 1.5rem;
+  pointer-events: none;
+}
+
+.overlay > * {
+  pointer-events: auto;
+}
+
+.overlay p {
+  margin: 0.5rem 0 0;
 }
 
 .simulated {
   display: inline-block;
   padding: 0.2rem 0.6rem;
   border: 2px solid currentColor;
+  background: rgb(255 255 255 / 0.7);
   font-weight: 700;
   letter-spacing: 0.1em;
+}
+
+.legend {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgb(255 255 255 / 0.7);
+}
+
+.legend ol {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.5rem;
 }

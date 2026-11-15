@@ -41,11 +41,13 @@ Tools enforce what they can (`gofmt`, `go vet`, `tsc --strict`, oxlint, Prettier
 - **Files:** kebab-case (`town-view.tsx`); components PascalCase, one per file; hooks `useX`.
 - Function components and hooks only. Local state first; add a store only when prop-drilling actually hurts.
 - Rendering reads from the `RunLog` plus a playback cursor (`roundIndex`, `eventIndex`). Animation state is derived, not stored separately.
+- 3D scene components live in `src/town/`; world constants (floor size, camera limits) in `src/town/world.ts`.
+- Per-frame updates go in `useFrame` and mutate refs. Never set React state every frame.
 - Never edit the generated `src/sim-types.ts`. Change the Go struct and regenerate.
-- All belief-to-colour and belief-to-expression mapping lives in `src/visual/belief.ts`; personality-to-shape-and-accessory mapping lives in `src/visual/personality.ts`.
-- **Accessibility:** never use colour as the only cue; give every clickable character a focusable element with an `aria-label`; respect `prefers-reduced-motion`.
+- All belief-to-colour and belief-to-expression mapping lives in `src/visual/belief.ts`; archetype-to-shape mapping lives in `src/visual/personality.ts`.
+- **Accessibility:** never use colour as the only cue; 3D meshes aren't focusable, so the inspector also offers an HTML list of characters (buttons with accessible names); respect `prefers-reduced-motion`.
 - Show the **SIMULATED** label on every screen that displays generated text.
-- Tests (Vitest) only for logic such as playback derivation and data transforms, added when that logic exists. Don't snapshot-test SVG.
+- Tests (Vitest) only for logic such as playback derivation and data transforms, added when that logic exists. Don't snapshot-test the 3D scene.
 
 ## Git
 

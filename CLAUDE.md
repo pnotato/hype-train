@@ -6,7 +6,7 @@ Guidance for coding agents working in this repo. **Read `docs/STYLE_GUIDE.md` be
 
 ## What this is
 
-**Hype Train** is a small simulated town where LLM agents pass around a real news story and distort it, one round at a time. You can click any resident to see why they said what they said. A **Go** backend runs the simulation and makes the model calls. A **React + TypeScript** client (Vite, SVG rendering) plays back the recorded event log.
+**Hype Train** is a small simulated town where LLM agents pass around a real news story and distort it, one round at a time. You can click any resident to see why they said what they said. A **Go** backend runs the simulation and makes the model calls. A **React + TypeScript** client (Vite, React Three Fiber (Three.js) 3D scene) plays back the recorded event log.
 
 Inspired by Nicky Case's *We Become What We Behold* (Unlicense code / CC0 art). Credit it in the app's About screen and in the README.
 
@@ -29,6 +29,7 @@ internal/sim/      Pure, deterministic simulation: types, round loop, agents, be
 internal/server/   HTTP routes; thin, calls into sim + providers
 internal/provider/ (M3) model providers: stub, anthropic
 web/               React + Vite + TS client (own package.json)
+web/src/town/      3D scene (R3F): floor, camera, later the residents (one body shape per archetype)
 seeds/             Seed stories (JSON)
 runs/              Recorded RunLogs. Curated demo runs are committed; runs/scratch/ is gitignored.
 docs/              PLAN.md, STYLE_GUIDE.md
