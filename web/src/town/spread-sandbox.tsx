@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   causeChain,
   initialState,
@@ -29,7 +29,9 @@ import {
 } from "../spread/life.ts";
 import { archetypeLabel, archetypes, shapeFor, type Archetype } from "../visual/personality.ts";
 import type { Object3D } from "three";
+import { cellOf, freeNeighbour, hexDistance, hexStep, worldToHex } from "../spread/hex.ts";
 import CauseLinks from "./cause-links.tsx";
+import HexGrid from "./hex-grid.tsx";
 import { faceColour, type FaceStyle } from "./faces.ts";
 import MoodActor, { type Pose } from "./mood-actor.tsx";
 import ResidentDock from "./resident-dock.tsx";
@@ -47,7 +49,6 @@ import type { SandboxItem } from "./sandbox-rows.ts";
 // ponytail: a browser-side prototype; the real sim runs in Go and the UI only
 // replays its log (CLAUDE.md rule 4).
 
-const approach = 1.1; // how close the speaker stands to the listener
 const seconds = { walk: 1.4, talk: 1.2, react: 1.3 };
 const maxTurns = 60;
 
@@ -87,6 +88,8 @@ const circle: SpreadLayout = {
   wanderRadius: 5.5,
 };
 
+const adjacent = (a: Vec, b: Vec) => hexDistance(worldToHex(a), worldToHex(b)) === 1;
+
 type Stage = {
   position: Vec;
   yaw: number;
@@ -116,8 +119,13 @@ function stage(sim: SimState, turn: Turn | undefined, phase: Phase, life: Life):
   const s = out[turn.speaker]!;
   const l = out[turn.listener]!;
   const lHome = life.people[turn.listener]!.pos;
-  // Walk up to the listener from wherever the speaker is.
-  const spot = towards(lHome, life.people[turn.speaker]!.pos, approach);
+  const sFrom = life.people[turn.speaker]!.pos;
+  // Hexes everyone else stands on or is walking to.
+  const taken = new Set(life.people.filter((_, i) => i !== turn.speaker).map((w) => cellOf(w.pos)));
+  // Walk up to a free hex next to the listener, on the side the speaker comes
+  // from. If the speaker is already next to them, they stay put.
+  const spot = adjacent(sFrom, lHome) ? sFrom : (freeNeighbour(lHome, sFrom, taken) ?? sFrom);
+  taken.add(cellOf(spot));
   s.position = spot;
   s.yaw = yawTo(spot, lHome);
   s.walking = phase === "walk";
@@ -138,7 +146,8 @@ function stage(sim: SimState, turn: Turn | undefined, phase: Phase, life: Life):
     const react: Record<Outcome, () => void> = {
       shrug: () => {},
       avoid: () => {
-        l.position = towards(lHome, spot, -1.3);
+        // Step to the free neighbouring hex furthest from the speaker.
+        l.position = freeNeighbour(lHome, towards(lHome, spot, -5), taken) ?? lHome;
         l.yaw = yawTo(spot, lHome);
         l.pose = "bounce";
       },
@@ -178,7 +187,7 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
   const [speed, setSpeed] = useState(1);
   const [contagion, setContagion] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
-  const homes = layout.homes(sim.people.length);
+  const homes = useMemo(() => layout.homes(sim.people.length), [layout, sim.people.length]);
   const [life, setLife] = useState(() => startLife(homes));
   const lifeRng = useRef(makeRng(2));
 
@@ -196,27 +205,39 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
     setLife(startLife(homes));
   }
 
+  // One sim turn. Once a speaker sets off, their hex next to the listener is
+  // theirs in town life too, so it stays put however the others move.
   function advance() {
     const next = step(sim, run.rng, opts);
     setRun({ ...run, sim: next });
+    const t = next.turns.at(-1);
+    if (t && t !== turn) {
+      const spot = stage(next, t, "walk", life)[t.speaker]!.position;
+      setLife((l) => ({
+        ...l,
+        people: l.people.map((w, i) => (i === t.speaker ? { ...w, pos: spot } : w)),
+      }));
+    }
     return next;
   }
 
   // Town life ticks about once a second, and keeps going after the sim ends.
   const lifeOn = playing || !!sim.done;
   const busy = new Set(turn && phase !== "idle" ? [turn.speaker, turn.listener] : []);
+  const stages = stage(sim, turn, phase, life);
+  const reserved = [...busy].map((i) => stages[i]!.position); // their hexes stay clear
   useEffect(() => {
     if (!lifeOn) return;
     const id = setTimeout(() => {
       const rng = lifeRng.current;
       const wander = (i: number) => (rng() < 0.3 ? homes[i]! : inDisc(layout.wanderRadius, rng));
-      setLife((l) => lifeStep(l, busy, wander, (i) => sim.people[i]!.traits.sociability, rng));
+      setLife((l) =>
+        lifeStep(l, busy, reserved, wander, (i) => sim.people[i]!.traits.sociability, rng),
+      );
     }, 1000 / speed);
     return () => clearTimeout(id);
     // busy and homes follow from sim and phase; life covers the tick.
   }, [life, lifeOn, speed, sim, phase]); // oxlint-disable-line react-hooks/exhaustive-deps
-
-  const stages = stage(sim, turn, phase, life);
 
   // Play loop: idle → (one conversation) → walk → talk → react → idle.
   useEffect(() => {
@@ -300,6 +321,7 @@ export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayo
         onPointerMissed={() => setSelected(null)}
       >
         {layout.scenery?.(sim.people)}
+        <HexGrid radius={layout.wanderRadius + hexStep} extra={homes} />
         <CauseLinks links={chain} anchors={anchors} />
         {sim.people.map((p, i) => {
           const s = stages[i]!;
