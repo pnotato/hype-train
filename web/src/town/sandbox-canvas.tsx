@@ -27,10 +27,18 @@ function ZoomFog() {
 type Props = {
   cameraStart: [number, number, number];
   onPointerMissed?: () => void;
+  grid?: boolean;
+  shadowExtent?: number; // half-width of the shadow camera; smaller is sharper
   children: ReactNode;
 };
 
-export default function SandboxCanvas({ cameraStart, onPointerMissed, children }: Props) {
+export default function SandboxCanvas({
+  cameraStart,
+  onPointerMissed,
+  grid = true,
+  shadowExtent = half,
+  children,
+}: Props) {
   const controls = useRef<Controls>(null);
 
   return (
@@ -49,10 +57,10 @@ export default function SandboxCanvas({ cameraStart, onPointerMissed, children }
         position={[50, 100, 40]}
         intensity={1.6}
         shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-half}
-        shadow-camera-right={half}
-        shadow-camera-top={half}
-        shadow-camera-bottom={-half}
+        shadow-camera-left={-shadowExtent}
+        shadow-camera-right={shadowExtent}
+        shadow-camera-top={shadowExtent}
+        shadow-camera-bottom={-shadowExtent}
         shadow-camera-far={300}
       />
 
@@ -61,18 +69,20 @@ export default function SandboxCanvas({ cameraStart, onPointerMissed, children }
         <meshStandardMaterial color={floorColour} />
       </mesh>
 
-      <Grid
-        position-y={0.01}
-        args={[floorSize, floorSize]}
-        cellSize={1}
-        cellThickness={0.5}
-        cellColor="#8fae86"
-        sectionSize={10}
-        sectionThickness={1}
-        sectionColor="#6f8f67"
-        fadeDistance={250}
-        fadeStrength={1.5}
-      />
+      {grid && (
+        <Grid
+          position-y={0.01}
+          args={[floorSize, floorSize]}
+          cellSize={1}
+          cellThickness={0.5}
+          cellColor="#8fae86"
+          sectionSize={10}
+          sectionThickness={1}
+          sectionColor="#6f8f67"
+          fadeDistance={250}
+          fadeStrength={1.5}
+        />
+      )}
 
       <MapControls
         ref={controls}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   initialState,
   interactions,
@@ -14,6 +14,16 @@ import {
   type SimState,
   type Turn,
 } from "../spread/sim.ts";
+import {
+  chatting,
+  inDisc,
+  lifeStep,
+  startLife,
+  towards,
+  yawTo,
+  type Life,
+  type Vec,
+} from "../spread/life.ts";
 import { archetypeLabel, archetypes, shapeFor, type Archetype } from "../visual/personality.ts";
 import { faceColour, type FaceStyle } from "./faces.ts";
 import MoodActor, { type Pose } from "./mood-actor.tsx";
@@ -24,17 +34,32 @@ import type { SandboxItem } from "./sandbox-rows.ts";
 // Third sandbox (?spread): 10 happy residents and one angry one, who
 // walks up to people and tries to make them angry. Each conversation's outcome
 // is a weighted random pick from the listener's traits (src/spread/sim.ts).
+// Between conversations everyone wanders and free pairs stop for a friendly
+// chat (src/spread/life.ts); only the sim changes moods.
+// The same sim also drives the town page, which swaps in a different layout
+// (where everyone lives) and scenery.
 // ponytail: a browser-side prototype; the real sim runs in Go and the UI only
 // replays its log (CLAUDE.md rule 4).
 
-const cameraStart: [number, number, number] = [0, 11, 14];
-const radius = 4.5;
 const approach = 1.1; // how close the speaker stands to the listener
 const seconds = { walk: 1, talk: 1.2, react: 1.3 };
 const maxTurns = 60;
 
 type Phase = "idle" | "walk" | "talk" | "react";
-type Vec = [number, number, number];
+export type { Vec };
+
+// Where everyone lives and what surrounds them.
+export type SpreadLayout = {
+  title: string;
+  cameraStart: Vec;
+  // Home spot for each of n people. Conversations happen on the side of the
+  // listener's home facing the origin, so keep the space between homes clear.
+  homes: (n: number) => Vec[];
+  wanderRadius: number; // residents roam a disc this big around the origin
+  scenery?: (people: Person[]) => ReactNode;
+  grid?: boolean;
+  shadowExtent?: number; // half-width of the area that casts sharp shadows
+};
 
 const moodFace: Record<Mood, FaceStyle> = {
   happy: "smile",
@@ -44,46 +69,55 @@ const moodFace: Record<Mood, FaceStyle> = {
 };
 
 // The angry one (index 0) lives in the middle; everyone else on a circle around them.
-function home(i: number, n: number): Vec {
-  if (i === 0) return [0, 0, 0];
-  const a = ((i - 1) / (n - 1)) * Math.PI * 2;
-  return [radius * Math.sin(a), 0, radius * Math.cos(a)];
-}
+const circle: SpreadLayout = {
+  title: "Angry spreader",
+  cameraStart: [0, 11, 14],
+  homes: (n) =>
+    Array.from({ length: n }, (_, i): Vec => {
+      if (i === 0) return [0, 0, 0];
+      const a = ((i - 1) / (n - 1)) * Math.PI * 2;
+      return [4.5 * Math.sin(a), 0, 4.5 * Math.cos(a)];
+    }),
+  wanderRadius: 5.5,
+};
 
-function towards(from: Vec, to: Vec, dist: number): Vec {
-  const dx = to[0] - from[0];
-  const dz = to[2] - from[2];
-  const len = Math.hypot(dx, dz) || 1;
-  return [from[0] + (dx / len) * dist, 0, from[2] + (dz / len) * dist];
-}
+type Stage = {
+  position: Vec;
+  yaw: number;
+  mood: Mood;
+  pose: Pose;
+  talking: boolean;
+  walking: boolean;
+};
 
-const yawTo = (from: Vec, to: Vec) => Math.atan2(to[0] - from[0], to[2] - from[2]);
-
-type Stage = { position: Vec; yaw: number; mood: Mood; pose: Pose; talking: boolean };
-
-// Where each person stands and what they do right now, from the sim state,
-// the latest turn and the phase of its animation.
-function stage(sim: SimState, turn: Turn | undefined, phase: Phase): Stage[] {
-  const n = sim.people.length;
-  const homes = sim.people.map((_, i) => home(i, n));
-  const out: Stage[] = sim.people.map((p, i) => ({
-    position: homes[i]!,
-    yaw: 0,
-    mood: p.mood,
-    pose: "idle",
-    talking: false,
-  }));
+// Where each person stands and what they do right now, from town life, the
+// sim state, the latest turn and the phase of its animation.
+function stage(sim: SimState, turn: Turn | undefined, phase: Phase, life: Life): Stage[] {
+  const out: Stage[] = sim.people.map((p, i) => {
+    const w = life.people[i]!;
+    const talking = chatting(life, i);
+    return {
+      position: w.pos,
+      yaw: w.yaw,
+      mood: p.mood,
+      pose: w.walking ? "bounce" : talking ? "lean" : "idle",
+      talking,
+      walking: w.walking,
+    };
+  });
   if (!turn || phase === "idle") return out;
 
   const s = out[turn.speaker]!;
   const l = out[turn.listener]!;
-  const lHome = homes[turn.listener]!;
-  // Stand between the listener and the middle, or in front if they are in the middle.
-  const spot =
-    turn.listener === 0 ? towards(lHome, [0, 0, 1], approach) : towards(lHome, [0, 0, 0], approach);
+  const lHome = life.people[turn.listener]!.pos;
+  // Walk up to the listener from wherever the speaker is.
+  const spot = towards(lHome, life.people[turn.speaker]!.pos, approach);
   s.position = spot;
   s.yaw = yawTo(spot, lHome);
-  l.yaw = phase === "walk" ? 0 : yawTo(lHome, spot);
+  s.walking = phase === "walk";
+  s.talking = l.talking = false;
+  l.pose = s.pose = "idle";
+  if (phase !== "walk") l.yaw = yawTo(lHome, spot);
   if (phase !== "react") {
     s.mood = turn.speakerMood[0];
     l.mood = turn.listenerMood[0];
@@ -124,7 +158,7 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
 const who = (p: Person) =>
   `${p.fullName} (${archetypeLabel[p.archetype]}${p.variant ? `, ${p.variant.replace("-", " ")}` : ""})`;
 
-export default function SpreadSandbox() {
+export default function SpreadSandbox({ layout = circle }: { layout?: SpreadLayout }) {
   const [seed, setSeed] = useState(1);
   const [spreaderType, setSpreaderType] = useState<Archetype>("regular");
   // The RNG and the state it produced live together, so a restart replaces both.
@@ -138,6 +172,9 @@ export default function SpreadSandbox() {
   const [speed, setSpeed] = useState(1);
   const [contagion, setContagion] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
+  const homes = layout.homes(sim.people.length);
+  const [life, setLife] = useState(() => startLife(homes));
+  const lifeRng = useRef(makeRng(2));
 
   const turn = sim.turns.at(-1);
   const opts = { contagion, maxTurns };
@@ -149,6 +186,8 @@ export default function SpreadSandbox() {
     setRun({ rng, sim: initialState(type, rng) });
     setPhase("idle");
     setSelected(null);
+    lifeRng.current = makeRng(nextSeed + 1);
+    setLife(startLife(homes));
   }
 
   function advance() {
@@ -156,6 +195,22 @@ export default function SpreadSandbox() {
     setRun({ ...run, sim: next });
     return next;
   }
+
+  // Town life ticks about once a second, and keeps going after the sim ends.
+  const lifeOn = playing || !!sim.done;
+  const busy = new Set(turn && phase !== "idle" ? [turn.speaker, turn.listener] : []);
+  useEffect(() => {
+    if (!lifeOn) return;
+    const id = setTimeout(() => {
+      const rng = lifeRng.current;
+      const wander = (i: number) => (rng() < 0.3 ? homes[i]! : inDisc(layout.wanderRadius, rng));
+      setLife((l) => lifeStep(l, busy, wander, rng));
+    }, 1000 / speed);
+    return () => clearTimeout(id);
+    // busy and homes follow from sim and phase; life covers the tick.
+  }, [life, lifeOn, speed, sim, phase]); // oxlint-disable-line react-hooks/exhaustive-deps
+
+  const stages = stage(sim, turn, phase, life);
 
   // Play loop: idle → (one conversation) → walk → talk → react → idle.
   useEffect(() => {
@@ -167,7 +222,18 @@ export default function SpreadSandbox() {
           const next = advance();
           if (next.done) setPlaying(false);
           else setPhase("walk");
-        } else setPhase(phase === "walk" ? "talk" : phase === "talk" ? "react" : "idle");
+        } else if (phase === "react") {
+          // Both stay where the conversation left them.
+          setLife((l) => ({
+            ...l,
+            people: l.people.map((w, i) =>
+              i === turn?.speaker || i === turn?.listener
+                ? { ...w, pos: stages[i]!.position, yaw: stages[i]!.yaw }
+                : w,
+            ),
+          }));
+          setPhase("idle");
+        } else setPhase(phase === "walk" ? "talk" : "react");
       },
       (wait * 1000) / speed,
     );
@@ -175,7 +241,6 @@ export default function SpreadSandbox() {
     // advance reads sim and opts from this render; sim and contagion cover them.
   }, [phase, playing, speed, sim, contagion]); // oxlint-disable-line react-hooks/exhaustive-deps
 
-  const stages = stage(sim, turn, phase);
   const counts = Object.fromEntries(
     moods.map((m) => [m, stages.filter((s) => s.mood === m).length]),
   ) as Record<Mood, number>;
@@ -197,15 +262,25 @@ export default function SpreadSandbox() {
       details: [["mood", mood], ...Object.entries(p.traits)],
     };
   };
-  // Who the selected resident is talking to in the current conversation.
+  // Who the selected resident is talking to: their sim conversation, else their chat.
   const partnerOf = (i: number | null) => {
-    if (i === null || !turn || phase === "idle") return undefined;
-    return i === turn.speaker ? turn.listener : i === turn.listener ? turn.speaker : undefined;
+    if (i === null) return undefined;
+    if (turn && phase !== "idle") {
+      if (i === turn.speaker) return turn.listener;
+      if (i === turn.listener) return turn.speaker;
+    }
+    return life.people[i]?.chat?.with;
   };
 
   return (
     <>
-      <SandboxCanvas cameraStart={cameraStart} onPointerMissed={() => setSelected(null)}>
+      <SandboxCanvas
+        cameraStart={layout.cameraStart}
+        grid={layout.grid}
+        shadowExtent={layout.shadowExtent}
+        onPointerMissed={() => setSelected(null)}
+      >
+        {layout.scenery?.(sim.people)}
         {sim.people.map((p, i) => {
           const s = stages[i]!;
           return (
@@ -230,7 +305,8 @@ export default function SpreadSandbox() {
                 yaw={s.yaw}
                 pose={s.pose}
                 talking={s.talking}
-                walkSpeed={4 * speed}
+                // Strolls are slower than walking up to someone.
+                walkSpeed={(s.walking && !busy.has(i) ? 2 : 4) * speed}
               >
                 {/* The one who started angry wears a red ring. */}
                 {p.spreader && (
@@ -252,7 +328,7 @@ export default function SpreadSandbox() {
       </SandboxCanvas>
 
       <aside className="sandbox-panel" aria-label="Simulation controls">
-        <h2>Angry spreader</h2>
+        <h2>{layout.title}</h2>
         <div className="controls">
           <button type="button" onClick={() => setPlaying(!playing)} disabled={!!sim.done}>
             {playing ? "Pause" : "Play"}

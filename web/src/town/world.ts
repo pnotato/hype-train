@@ -3,11 +3,7 @@
 /** Side length of the square floor, in world units. */
 export const floorSize = 200;
 
-/** Where the camera starts, looking at the origin. */
-export const cameraStart: [number, number, number] = [0, 60, 80];
-
-/** Zoom limits: distance from the camera to the point it orbits. */
-export const minZoomDistance = 10;
+/** Zoom limit: farthest the camera can be from the point it orbits. */
 export const maxZoomDistance = 180;
 
 /** Steepest tilt from straight down; keeps the camera above the floor. */
