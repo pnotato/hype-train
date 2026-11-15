@@ -97,7 +97,7 @@ export const rows: SandboxRow[] = [
 ];
 
 // The two actors in each scenario, selectable like any other character. The
-// portrait shows the face of the scenario's last beat, where it comes to rest.
+// face here is the last beat's; the sandbox swaps in the live face as it plays.
 export const actorId = (sc: Scenario, side: "a" | "b") => `${sc.id}-${side}`;
 
 export const actorItems: SandboxItem[] = scenarios.flatMap((sc) =>

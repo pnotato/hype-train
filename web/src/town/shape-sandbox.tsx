@@ -1,9 +1,10 @@
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 import AnimatedResident from "./animated-resident.tsx";
 import Resident from "./resident.tsx";
 import ResidentDock from "./resident-dock.tsx";
 import ScenarioView from "./scenario-view.tsx";
-import { scenarios } from "./scenarios.ts";
+import { faceColour, type FaceStyle } from "./faces.ts";
+import { scenarios, type Beat, type Scenario } from "./scenarios.ts";
 import { actorId, actorItems, rows, type SandboxItem } from "./sandbox-rows.ts";
 import SandboxCanvas from "./sandbox-canvas.tsx";
 import Selectable from "./selectable.tsx";
@@ -61,7 +62,22 @@ export default function ShapeSandbox() {
   const [hiddenRows, setHiddenRows] = useState(() => new Set<string>());
   const [hiddenItems, setHiddenItems] = useState(() => new Set<string>());
   const [selected, setSelected] = useState<string | null>(null);
-  const selectedItem = itemById(selected);
+  // Scenario actors' current faces, so the portrait shows what the scene shows.
+  const [liveFaces, setLiveFaces] = useState<Record<string, FaceStyle>>({});
+  const onBeat = useCallback(
+    (sc: Scenario, beat: Beat) =>
+      setLiveFaces((prev) => ({
+        ...prev,
+        [actorId(sc, "a")]: beat.a.face,
+        [actorId(sc, "b")]: beat.b.face,
+      })),
+    [],
+  );
+  const live = (item: SandboxItem | undefined) => {
+    const face = item && liveFaces[item.id];
+    return face ? { ...item, face, colour: faceColour[face] } : item;
+  };
+  const selectedItem = live(itemById(selected));
 
   return (
     <>
@@ -90,6 +106,7 @@ export default function ShapeSandbox() {
                 position={[scenarioX(i), 0, scenarioZ]}
                 selected={selected}
                 onSelect={setSelected}
+                onBeat={onBeat}
               />
             ),
           )}
@@ -180,7 +197,7 @@ export default function ShapeSandbox() {
 
       <ResidentDock
         item={selectedItem}
-        partner={itemById(selectedItem?.talkingTo)}
+        partner={live(itemById(selectedItem?.talkingTo))}
         onSelect={setSelected}
       />
     </>
