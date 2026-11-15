@@ -65,4 +65,5 @@ make build   # web/dist + bin/server; then ./bin/server serves everything on :80
 - Write the test first for sim logic (round loop, belief transitions, chain of custody, log round-trip).
 - Don't add a dependency without saying why in the commit message. Prefer the Go standard library.
 - For UI work, also run `make dev` and look at it.
-- Commit or push only when asked.
+- Commit and push every change to GitHub (`origin`) as soon as `make check` passes. Stage only the files you changed; leave other people's uncommitted work alone.
+- Commits are authored by the repo's git user (Nicholas Chan) only. Don't add `Co-Authored-By: Claude` or any other Claude or AI attribution, trailer or "Generated with" line to commit messages or PR descriptions.
