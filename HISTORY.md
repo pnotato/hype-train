@@ -82,6 +82,8 @@ The sim had **6 archetypes** (Regular, Connector, Worrier, Skeptic, Clout-chaser
     - **Dropped:** "adults more likely to believe elders" (no evidence found).
     - **Added (marked design):** tag names (`skeptic/gullible`, `quiet/chatty`, `unconvincing/charismatic`), age groups with Canadian shares, starting scores (perception 50, interest 20), no social media for children, and the rule that shape sets *who* a blob trusts and credulity sets *how much*.
 
+20. **Children and social media: AI design note corrected.** The AI had written "children: no social media" into `BLOBS.md` as a design choice. Nicholas questioned it ("wouldn't it be like they can read but can't post?"). A check showed teens use social media heavily, and many under-13s use it despite platform age rules. **Now:** under 13 read only *(design)*; 13–17 read and post. Posting is rare at every age, which rare `chatty` blobs already cover.
+
 ### Where the design stands
 A town of about 100 Canadian-representative blobs (shape = culture, size = age and family) with exact ages and three trait categories (Credulity, Socialness, Persuasiveness), plus Family-oriented, Recluse and Leader. Each blob has perception and interest scores (0–100). The player runs a fictional AI company's newsroom and picks a news story every 10 of 50 rounds; bold claims raise interest now and cost perception if the product underdelivers. No win or lose. Open: the product reality model, the player's choices, the LLM's role, and hard rule 4 for a live mode (see `docs/agents/PLAN.md` §2).
 

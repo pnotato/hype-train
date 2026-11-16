@@ -44,7 +44,9 @@ Perception and interest are separate. People share things they don't believe, so
 
 Shares are from Canadian population estimates [3]. The child share is an estimate.
 
-- **Children** believe their parents more than anyone else [4], [5]. Not guaranteed. No social media *(design)*.
+- **Children** believe their parents more than anyone else [4], [5]. Not guaranteed.
+	- Under 13: read social media, don't post *(design)*. Platforms bar them, but many use it anyway [35].
+	- 13–17: read and post like adults. Most teens use social media daily [36].
 - **Elders** trust more, not less [6]. They miss warning signs [7] and share more questionable news online [8], because of digital literacy and source memory, not decline [9]. Elders don't get extra credulity; age changes trust and channel only.
 
 # Traits
@@ -174,3 +176,7 @@ Each round a blob talks, posts, or idles.
 [33] S. Breznitz, *Cry Wolf: The Psychology of False Alarms*. Hillsdale, NJ, USA: Lawrence Erlbaum, 1984.
 
 [34] K. Clayton *et al.*, "Real solutions for fake news? Measuring the effectiveness of general warnings and fact-check tags in reducing belief in false stories on social media," *Political Behav.*, vol. 42, pp. 1073–1095, 2020, doi: 10.1007/s11109-019-09533-0.
+
+[35] MediaSmarts, "Young Canadians in a wireless world, phase III: Life online," Ottawa, ON, Canada, 2014. [Online]. Available: https://mediasmarts.ca/sites/default/files/pdfs/publication-report/summary/YCWWIII_Life_Online_ExecutiveSummary.pdf
+
+[36] Pew Research Center, "Teens, social media and AI chatbots 2025," Washington, DC, USA, Dec. 2025. [Online]. Available: https://www.pewresearch.org
