@@ -4,7 +4,7 @@ Tools enforce what they can (`gofmt`, `go vet`, `tsc --strict`, oxlint, Prettier
 
 ## Shared
 
-- **Domain words:** use these consistently in both languages: **resident**, **outlet**, **agent** (either one), **seed**, **round**, **event**, **belief**, **mutation**, **run**, **chain of custody**. Don't introduce synonyms like "npc", "bot", "turn", or "step".
+- **Domain words:** use these consistently in both languages: **blob** (a resident; `docs/BLOBS.md`), **outlet**, **agent** (either one), **seed**, **round**, **event**, **perception**, **interest**, **story** (the player's news), **talk**, **post**, **mutation**, **run**, **chain of custody**. Don't introduce synonyms like "npc", "bot", "turn", or "step".
 - **IDs** are readable strings (`"res-03"`, `"outlet-clickbait"`), not UUIDs, so logs stay diffable.
 - **JSON** field names are camelCase (`sourceEventIds`), set with Go struct tags.
 - **Comments** explain *why*, not *what*. Delete commented-out code. Mark a deliberate shortcut with `TODO(scope): reason`.

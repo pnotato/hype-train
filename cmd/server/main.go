@@ -12,7 +12,8 @@ import (
 
 func main() {
 	cfg := server.Config{
-		Brain: cmp.Or(os.Getenv("BRAIN"), "stub"),
+		Brain:   cmp.Or(os.Getenv("BRAIN"), "stub"),
+		RunsDir: cmp.Or(os.Getenv("RUNS_DIR"), "runs/scratch"),
 	}
 	if _, err := os.Stat("web/dist"); err == nil {
 		cfg.WebDist = "web/dist"

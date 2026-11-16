@@ -23,14 +23,14 @@ Sections 1–2 are the current direction (15 Nov 2026). Sections 3+ are the orig
 1. **Product reality model.** What each announced feature actually does, and when blobs find out it underdelivered. Without this, "bold claims backfire" has nothing to compare against.
 2. **Player choices.** How many options per story, and what each one moves (perception, interest, which blobs hear it first).
 3. **LLM role and cost.** "100 small LLMs" live = 100 calls × 50 rounds ≈ 5,000 calls per playthrough. That's minutes per run with Haiku, hours with a local model. Proposal: rules decide every number; the LLM writes only displayed text (retellings, the click-panel reason), keyed by announcement × traits × mood and pregenerated offline, then reviewed. Needs the user's decision.
-4. **Who talks to whom.** Hex neighbours (current code), random pairs, or a social graph?
-5. **Social-media reach.** Who sees a post: followers, everyone, a sample? Recluses rely on this.
-6. **Hard rules.** A live player breaks rule 4 (UI only replays). Options: the server runs the sim and records player choices as events in the log, or the client sends choices and the server replies with the next 10 rounds.
+4. **Who talks to whom.** *Draft in code (`internal/sim/game.go`):* each round every blob rolls to share (socialness + interest, more if its perception is extreme); sharers talk or post. Talkers are chosen first, then each picks one free listener weighted by family (×4), home distance (1/(1+d)) and the listener's socialness. Nobody is in two talks a round. Recluses only post; under-13s only talk.
+5. **Social-media reach.** *Draft:* a leader's post reaches everyone of their shape; anyone else reaches 3 random blobs (+3 charismatic, +3 chatty), recluses twice as likely to be among them.
+6. ~~**Hard rules.**~~ **Decided (user, 15 Nov):** the Go backend runs and logs every round. The client sends a story choice and gets the next 10 rounds back. No database: a run is ~300 KB of JSON, kept in memory and written to `runs/scratch/<id>.json`. API: `POST /api/runs` → blobs + options; `POST /api/runs/{id}/story {"story"}` → 10 rounds + next options; `GET /api/runs/{id}` → full `RunLog`.
 7. **BLOBS.md drafts.** Tag names, Triangle/Tear rules, starting scores and trait shares are marked *(design)* in `docs/BLOBS.md`; confirm with the user before relying on them.
 
 ## 3. Core contract: the log
 
-**Status:** keep the idea (one JSON document is the Go↔TS contract, Go structs are the source of truth, TS is generated with `tygo`). The shape below is the original; it needs `perception`/`interest` per blob per round, player-choice events, and a product-reality record.
+**Status:** replaced by `RunLog` v2 in `internal/sim/game.go`: blobs, stories, choices, and per round the events (`story | talk | post`, each with the scores after it for every blob it reached) plus every blob's scores and the town averages. Still to do: product-reality record, `tygo`-generated TS types, retelling text. The original shape is kept below for reference.
 
 ```ts
 type Belief = "calm" | "unsure" | "worried" | "panicked"; // superseded by perception/interest 0–100
@@ -62,7 +62,7 @@ type MutationTag = { eventId: EventId; type: MutationType; note: string };
 
 ## 4. Residents (original persona model)
 
-**Status:** superseded by `docs/BLOBS.md`. Code still implements this (`internal/sim/persona.go`, `roster.go`). Mapping to the new model: `credulity` → Credulity, `broadcast`/`sociability` → Socialness, Hermit → Recluse. New: Persuasiveness, shape-as-culture, families, Leader. Dropped: archetypes, `reactivity`, `distortion`, `motive`, Cynic/True Believer variants. Age changes from 4 US brackets to an exact age with a Canadian distribution.
+**Status:** superseded by `docs/BLOBS.md`. Removed from the Go code on 15 Nov; `internal/sim/town.go` now implements BLOBS.md. The browser prototypes in `web/src/spread/` still use it. Mapping to the new model: `credulity` → Credulity, `broadcast`/`sociability` → Socialness, Hermit → Recluse. New: Persuasiveness, shape-as-culture, families, Leader. Dropped: archetypes, `reactivity`, `distortion`, `motive`, Cynic/True Believer variants. Age changes from 4 US brackets to an exact age with a Canadian distribution.
 
 Original model, kept for reference:
 - 6 archetypes with shares per 100: Regular 35, Connector 15, Worrier 15, Skeptic 15, Clout-chaser 10 (split True Believer / Cynic), Hermit 10.

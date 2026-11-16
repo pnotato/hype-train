@@ -17,7 +17,7 @@ Inspired by Nicky Case's *We Become What We Behold* (Unlicense code / CC0 art). 
 1. **No API keys in the browser.** Only the Go server reads secrets, from the environment. The client never calls a model.
 2. **Stub brain by default.** Dev, tests, and CI run on the deterministic stub provider and cost $0. A real model call needs `BRAIN=anthropic` set explicitly.
 3. **Everything generated is labelled SIMULATED.** Real people in a seed get fictional names before anything reaches a prompt.
-4. **The sim is the source of truth; the UI only replays it.** The client renders a `RunLog`. It never decides who talks to whom or what anyone believes.
+4. **The sim is the source of truth; the UI only replays it.** The Go server runs every round and logs it. The client renders the `RunLog` and sends one thing back: the player's story choice (`POST /api/runs/{id}/story`). It never decides who talks to whom or what anyone believes.
 5. **One module maps state to looks.** Blob state is `perception` and `interest`, 0–100 (this replaced the old `calm | unsure | worried | panicked` belief words on 15 Nov 2026). Colour and facial expression are derived from it in one client module, and expression is always shown so colour is never the only cue.
 6. **Reference repo `leakyhose/agent-economy`: architecture reference only.** It has no license and nobody has confirmed who owns it. Don't copy code from it until the user confirms.
 7. **Cap spend.** Every real run has a hard ceiling on rounds and agents (config), and the server refuses to start a run past it.
@@ -27,8 +27,8 @@ Inspired by Nicky Case's *We Become What We Behold* (Unlicense code / CC0 art). 
 ```
 cmd/server/        HTTP server entrypoint (serves /api, plus web/dist when built)
 cmd/sim/           (M1) headless CLI: run a seed → runs/<id>.json
-internal/sim/      Pure, deterministic simulation: types, round loop, agents, belief, stub brain. No I/O.
-internal/server/   HTTP routes; thin, calls into sim + providers
+internal/sim/      Pure, deterministic simulation: blobs and town (town.go), round loop and RunLog (game.go). No I/O.
+internal/server/   HTTP routes (/api/runs …); thin, calls into sim + providers
 internal/provider/ (M3) model providers: stub, anthropic
 web/               React + Vite + TS client (own package.json)
 web/src/town/      3D scene (R3F): floor, camera, residents (one body shape per community)
