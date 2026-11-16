@@ -62,6 +62,8 @@ The sim had **6 archetypes** (Regular, Connector, Worrier, Skeptic, Clout-chaser
 
 14. **Educational framing.** The project has to be educational. The AI framed it as an *explorable explanation* with three learning goals (the claim–reality gap, losing control of your story as it spreads, burned audiences doubting true claims). It also proposed cutting scope: 5 stages instead of 10, stub brain live, LLM retellings generated offline and reviewed. **Pending** design review.
 
+15. **Real-world hype examples: AI error caught.** In entry 13's discussion the AI had said, from memory, that Long Island Iced Tea's stock jumped "about 200% in a day" after renaming itself Long Blockchain. When it checked while compiling real hype examples, the reported figure turned out to be **about 289% at close, up to about 380% intraday**. The SEC's later case (2021) was about insider trading around the announcement, not the hype itself. The AI also nearly linked IBM Watson's halted MD Anderson project ($62M, 2017) to IBM's 2022 sale of Watson Health; the search showed they were separate events. *Lesson:* verify before stating, even for "well-known" examples.
+
 ### Where the design stands
 A town of shape-coded blobs (shape = community, size = age and family, face = belief) with exact ages and three tag categories (Credulity, Socialness, Persuasiveness), plus Family-oriented, Recluse and Leader. Trust lives between blobs. The player runs a fictional tech company and announces features; hype lifts the stock now and costs trust once reality ships. Hard rules 3 and 4 need revisiting for a live, player-driven mode.
 
