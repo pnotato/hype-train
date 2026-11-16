@@ -14,7 +14,12 @@ const portraitTilt = -0.2;
 
 function Portrait({ item }: { item: SandboxItem }) {
   return (
-    <Canvas camera={{ position: [0, 0.3, 2.5], rotation: [-0.1, 0, 0], fov: 32 }} aria-hidden>
+    // A still pose, so draw only when something changes, not every frame.
+    <Canvas
+      frameloop="demand"
+      camera={{ position: [0, 0.3, 2.5], rotation: [-0.1, 0, 0], fov: 32 }}
+      aria-hidden
+    >
       <ambientLight intensity={0.8} />
       <directionalLight position={[-2, 3, 4]} intensity={1.6} />
       {/* Every body is about one unit tall from y = 0; drop it so it sits centred. */}

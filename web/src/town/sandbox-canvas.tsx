@@ -1,6 +1,6 @@
 import { Grid, MapControls } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Fog, MOUSE, Vector3 } from "three";
 import { clampToFloor, type Controls } from "./camera.ts";
 import WasdPan from "./wasd-pan.tsx";
@@ -10,6 +10,25 @@ import { floorColour, floorSize, maxPolarAngle, maxZoomDistance, skyColour } fro
 // pages. Same look as town-scene.tsx, but the camera can zoom in close.
 
 const half = floorSize / 2;
+
+// A big display slows the town down by fill rate: every pixel runs the
+// lighting, shadow and fog shaders. R3F draws at up to 2× the CSS size, so a
+// 4K monitor scaled to look like 2560×1440 draws ~15M pixels a frame, 2.5× a
+// 14" MacBook's ~6M. Keep the drawing buffer within that laptop budget,
+// never below 1×.
+const pixelBudget = 6_000_000;
+const budgetDpr = () =>
+  Math.max(1, Math.min(devicePixelRatio, Math.sqrt(pixelBudget / (innerWidth * innerHeight))));
+
+function useBudgetDpr() {
+  const [dpr, setDpr] = useState(budgetDpr);
+  useEffect(() => {
+    const update = () => setDpr(budgetDpr());
+    addEventListener("resize", update);
+    return () => removeEventListener("resize", update);
+  }, []);
+  return dpr;
+}
 
 // Fog that scales with zoom, so the floor's far edge always fades out but the
 // spot the camera looks at stays clear.
@@ -40,10 +59,12 @@ export default function SandboxCanvas({
   children,
 }: Props) {
   const controls = useRef<Controls>(null);
+  const dpr = useBudgetDpr();
 
   return (
     <Canvas
       shadows
+      dpr={dpr}
       camera={{ position: cameraStart, fov: 45, far: 1000 }}
       onPointerMissed={onPointerMissed}
     >
