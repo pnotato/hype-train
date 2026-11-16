@@ -64,8 +64,19 @@ The sim had **6 archetypes** (Regular, Connector, Worrier, Skeptic, Clout-chaser
 
 15. **Real-world hype examples: AI error caught.** In entry 13's discussion the AI had said, from memory, that Long Island Iced Tea's stock jumped "about 200% in a day" after renaming itself Long Blockchain. When it checked while compiling real hype examples, the reported figure turned out to be **about 289% at close, up to about 380% intraday**. The SEC's later case (2021) was about insider trading around the announcement, not the hype itself. The AI also nearly linked IBM Watson's halted MD Anderson project ($62M, 2017) to IBM's 2022 sale of Watson Health; the search showed they were separate events. *Lesson:* verify before stating, even for "well-known" examples.
 
+16. **Doc review (evening).** Nicholas rewrote `docs/PLAN.md` as a short human doc and added `docs/GAME LOOP.md`, moving `BLOBS.md` into `docs/`. The AI flagged that the rewrite had dropped the old plan's research evidence and milestones, and that "100 small LLMs" running live is about 5,000 calls per playthrough: too slow locally, and pregenerating the text is cheaper. **Decisions (Nicholas):** perception and interest are **scores out of 100**; **no winning or losing**, but the player wants both high near the end. This overrides the old hard rule 5 ("belief is a word, not a number"), which `CLAUDE.md` now reflects. The old plan was restored for agents as `docs/agents/PLAN.md`. The AI's recommendation to pregenerate LLM text is still open.
+
+17. **Research list with IEEE references.** The AI wrote `docs/RESEARCH.md` and checked 24 of its 41 references online. Errors caught or limits found while checking:
+    - The Traberg & van der Linden paper's authors couldn't be confirmed online (title, journal and DOI could).
+    - No published under-18 share for Canada turned up. The ~20% is an estimate.
+    - The 2023 *Scientific Reports* narcissism study from the old plan was dropped because its authors couldn't be confirmed.
+    
+    Unchecked references are marked.
+
+18. **BLOBS.md edits (asked for, kept short).** The AI fixed the JSON, made age a number, replaced `doomscroller` (no category) with `recluse`, removed the blank `occupation`, and un-inverted the Credulity definition ("Lower means more likely to believe" → "Higher"). It changed "Elder blobs are less likely to believe anyone" to match the research, removed a sentence fragment ("Children "), changed families from "1 other adult" to "1 adult" (single parents), changed "families share exact tags" to "share a shape; tags rolled per blob", changed Leader's persuasiveness from 5 to max (there are 3 levels), and added the 0–100 scores. **Left alone:** Triangle and Tear rules, the unsupported "adults believe elders" line, and trait adjective names. Those are Nicholas's calls.
+
 ### Where the design stands
-A town of shape-coded blobs (shape = community, size = age and family, face = belief) with exact ages and three tag categories (Credulity, Socialness, Persuasiveness), plus Family-oriented, Recluse and Leader. Trust lives between blobs. The player runs a fictional tech company and announces features; hype lifts the stock now and costs trust once reality ships. Hard rules 3 and 4 need revisiting for a live, player-driven mode.
+A town of about 100 Canadian-representative blobs (shape = culture, size = age and family) with exact ages and three trait categories (Credulity, Socialness, Persuasiveness), plus Family-oriented, Recluse and Leader. Each blob has perception and interest scores (0–100). The player runs a fictional AI company's newsroom and picks a news story every 10 of 50 rounds; bold claims raise interest now and cost perception if the product underdelivers. No win or lose. Open: the product reality model, the player's choices, the LLM's role, and hard rule 4 for a live mode (see `docs/agents/PLAN.md` §2).
 
 ## Adding entries
 

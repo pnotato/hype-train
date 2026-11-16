@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-Guidance for coding agents working in this repo. **Read `docs/STYLE_GUIDE.md` before writing code and `docs/PLAN.md` before starting a milestone.**
+Guidance for coding agents working in this repo. **Read `docs/STYLE_GUIDE.md` before writing code and `docs/agents/PLAN.md` before starting a milestone.** `docs/PLAN.md`, `docs/GAME LOOP.md` and `docs/BLOBS.md` are the user's human-written design docs: terse, their voice. They win over agent docs. Edit them only when asked, and keep the edits short and in their style.
 
 > Status: Milestone 0 (scaffold) done. Every design choice is a draft until the upcoming design review. If a doc and the user disagree, the user wins; update the doc in the same change.
 >
-> **Direction change (15 Nov 2026, pending design review):** the player runs a fictional tech company announcing features, trying to keep trust high while the stock price rises. Blobs are shapes again (shape = community, size = age/family), not vegetables. Blob properties are being standardised in `BLOBS.md` (human-written; don't edit without being asked). See `HISTORY.md` for how this was decided. Until the review, the text below describes the original premise.
+> **Direction change (15 Nov 2026, pending design review):** the player runs a fictional tech company announcing features, trying to keep trust high while the stock price rises. Blobs are shapes again (shape = culture, size = age/family), not vegetables. Each blob has `perception` and `interest` scores, 0–100; there's no win or lose, and the player aims for both high at the end. Current decisions and open questions are in `docs/agents/PLAN.md` §1–2; how they were reached is in `HISTORY.md`. Until the review, the text below describes the original premise.
 
 ## What this is
 
@@ -18,7 +18,7 @@ Inspired by Nicky Case's *We Become What We Behold* (Unlicense code / CC0 art). 
 2. **Stub brain by default.** Dev, tests, and CI run on the deterministic stub provider and cost $0. A real model call needs `BRAIN=anthropic` set explicitly.
 3. **Everything generated is labelled SIMULATED.** Real people in a seed get fictional names before anything reaches a prompt.
 4. **The sim is the source of truth; the UI only replays it.** The client renders a `RunLog`. It never decides who talks to whom or what anyone believes.
-5. **Belief is a word, not a number.** `calm | unsure | worried | panicked`. Colour and facial expression are derived from it in one client module, and expression is always shown so colour is never the only cue.
+5. **One module maps state to looks.** Blob state is `perception` and `interest`, 0–100 (this replaced the old `calm | unsure | worried | panicked` belief words on 15 Nov 2026). Colour and facial expression are derived from it in one client module, and expression is always shown so colour is never the only cue.
 6. **Reference repo `leakyhose/agent-economy`: architecture reference only.** It has no license and nobody has confirmed who owns it. Don't copy code from it until the user confirms.
 7. **Cap spend.** Every real run has a hard ceiling on rounds and agents (config), and the server refuses to start a run past it.
 
@@ -34,8 +34,8 @@ web/               React + Vite + TS client (own package.json)
 web/src/town/      3D scene (R3F): floor, camera, residents (one body shape per community)
 seeds/             Seed stories (JSON)
 runs/              Recorded RunLogs. Curated demo runs are committed; runs/scratch/ is gitignored.
-docs/              PLAN.md, STYLE_GUIDE.md
-BLOBS.md           Human-written blob property spec
+docs/              Human design docs (PLAN.md, GAME LOOP.md, BLOBS.md), STYLE_GUIDE.md, RESEARCH.md (findings + IEEE refs)
+docs/agents/       Agent-facing docs: PLAN.md (implementation plan, decisions, open questions)
 HISTORY.md         Decision log: rejected/overridden AI suggestions, caught AI errors, direction changes
 ```
 
