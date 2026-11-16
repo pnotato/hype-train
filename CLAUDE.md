@@ -34,7 +34,7 @@ web/               React + Vite + TS client (own package.json)
 web/src/town/      3D scene (R3F): floor, camera, residents (one body shape per community)
 seeds/             Seed stories (JSON)
 runs/              Recorded RunLogs. Curated demo runs are committed; runs/scratch/ is gitignored.
-docs/              Human design docs (PLAN.md, GAME LOOP.md, BLOBS.md), STYLE_GUIDE.md, RESEARCH.md (findings + IEEE refs)
+docs/              Human design docs (PLAN.md, GAME LOOP.md, BLOBS.md = master blob spec), STYLE_GUIDE.md, RESEARCH.md (findings + IEEE refs)
 docs/agents/       Agent-facing docs: PLAN.md (implementation plan, decisions, open questions)
 HISTORY.md         Decision log: rejected/overridden AI suggestions, caught AI errors, direction changes
 ```

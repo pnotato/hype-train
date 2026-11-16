@@ -75,6 +75,13 @@ The sim had **6 archetypes** (Regular, Connector, Worrier, Skeptic, Clout-chaser
 
 18. **BLOBS.md edits (asked for, kept short).** The AI fixed the JSON, made age a number, replaced `doomscroller` (no category) with `recluse`, removed the blank `occupation`, and un-inverted the Credulity definition ("Lower means more likely to believe" → "Higher"). It changed "Elder blobs are less likely to believe anyone" to match the research, removed a sentence fragment ("Children "), changed families from "1 other adult" to "1 adult" (single parents), changed "families share exact tags" to "share a shape; tags rolled per blob", changed Leader's persuasiveness from 5 to max (there are 3 levels), and added the 0–100 scores. **Left alone:** Triangle and Tear rules, the unsupported "adults believe elders" line, and trait adjective names. Those are Nicholas's calls.
 
+19. **BLOBS.md becomes the master blob doc (asked for; reworking interactions allowed).** The AI rewrote it with IEEE citations and its own reference list. Every rule is either cited or marked *(design)*. Changes to Nicholas's rules, so they're easy to revert:
+    - **Star:** "less likely to trust everybody" → trusts its shape's Leader most. The old rule duplicated low credulity.
+    - **Triangle and Tear filled in:** trusts own age, and trusts neighbours. Both are homophily bases.
+    - **Leader:** "only 1, changes every few rounds" → 1 per shape, stable. Research says opinion leaders are local and several.
+    - **Dropped:** "adults more likely to believe elders" (no evidence found).
+    - **Added (marked design):** tag names (`skeptic/gullible`, `quiet/chatty`, `unconvincing/charismatic`), age groups with Canadian shares, starting scores (perception 50, interest 20), no social media for children, and the rule that shape sets *who* a blob trusts and credulity sets *how much*.
+
 ### Where the design stands
 A town of about 100 Canadian-representative blobs (shape = culture, size = age and family) with exact ages and three trait categories (Credulity, Socialness, Persuasiveness), plus Family-oriented, Recluse and Leader. Each blob has perception and interest scores (0–100). The player runs a fictional AI company's newsroom and picks a news story every 10 of 50 rounds; bold claims raise interest now and cost perception if the product underdelivers. No win or lose. Open: the product reality model, the player's choices, the LLM's role, and hard rule 4 for a live mode (see `docs/agents/PLAN.md` §2).
 

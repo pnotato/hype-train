@@ -10,7 +10,7 @@ Sections 1–2 are the current direction (15 Nov 2026). Sections 3+ are the orig
 |---|---|---|
 | Premise | Player runs the newsroom of a fictional AI company. Bold claims raise interest; failing to deliver costs perception later. | `docs/PLAN.md` |
 | Population | ~100 blobs, representative of **Canada** | `docs/PLAN.md`, `docs/BLOBS.md` |
-| Blob model | id, name, shape (culture), exact age, traits from 3 categories (Credulity, Socialness, Persuasiveness) plus Family / Recluse / Leader | `docs/BLOBS.md` |
+| Blob model | **`docs/BLOBS.md` is the master spec** (properties, age, traits, shapes, interactions, cited) | `docs/BLOBS.md` |
 | Channels | Word of mouth and social media; blobs can also idle | `docs/PLAN.md`, `docs/GAME LOOP.md` |
 | Length | 50 rounds; a news story (player choice) every 10, so 5 decisions | `docs/GAME LOOP.md` |
 | Meters | Each blob has **perception** and **interest**, each a score **0–100**. The town averages are plotted per round. | user, 15 Nov |
@@ -26,7 +26,7 @@ Sections 1–2 are the current direction (15 Nov 2026). Sections 3+ are the orig
 4. **Who talks to whom.** Hex neighbours (current code), random pairs, or a social graph?
 5. **Social-media reach.** Who sees a post: followers, everyone, a sample? Recluses rely on this.
 6. **Hard rules.** A live player breaks rule 4 (UI only replays). Options: the server runs the sim and records player choices as events in the log, or the client sends choices and the server replies with the next 10 rounds.
-7. **BLOBS.md gaps.** Triangle and Tear have no rule yet; trait adjectives per level aren't named.
+7. **BLOBS.md drafts.** Tag names, Triangle/Tear rules, starting scores and trait shares are marked *(design)* in `docs/BLOBS.md`; confirm with the user before relying on them.
 
 ## 3. Core contract: the log
 
