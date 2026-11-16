@@ -3,6 +3,8 @@
 Guidance for coding agents working in this repo. **Read `docs/STYLE_GUIDE.md` before writing code and `docs/PLAN.md` before starting a milestone.**
 
 > Status: Milestone 0 (scaffold) done. Every design choice is a draft until the upcoming design review. If a doc and the user disagree, the user wins; update the doc in the same change.
+>
+> **Direction change (15 Nov 2026, pending design review):** the player runs a fictional tech company announcing features, trying to keep trust high while the stock price rises. Blobs are shapes again (shape = community, size = age/family), not vegetables. Blob properties are being standardised in `BLOBS.md` (human-written; don't edit without being asked). See `HISTORY.md` for how this was decided. Until the review, the text below describes the original premise.
 
 ## What this is
 
@@ -29,10 +31,12 @@ internal/sim/      Pure, deterministic simulation: types, round loop, agents, be
 internal/server/   HTTP routes; thin, calls into sim + providers
 internal/provider/ (M3) model providers: stub, anthropic
 web/               React + Vite + TS client (own package.json)
-web/src/town/      3D scene (R3F): floor, camera, later the residents (one body shape per archetype)
+web/src/town/      3D scene (R3F): floor, camera, residents (one body shape per community)
 seeds/             Seed stories (JSON)
 runs/              Recorded RunLogs. Curated demo runs are committed; runs/scratch/ is gitignored.
 docs/              PLAN.md, STYLE_GUIDE.md
+BLOBS.md           Human-written blob property spec
+HISTORY.md         Decision log: rejected/overridden AI suggestions, caught AI errors, direction changes
 ```
 
 Dependency direction: `cmd → internal/server → internal/sim`, with `internal/provider` implementing an interface that `sim` defines. `internal/sim` imports nothing else from this repo and only the standard library.
@@ -66,4 +70,5 @@ make build   # web/dist + bin/server; then ./bin/server serves everything on :80
 - Don't add a dependency without saying why in the commit message. Prefer the Go standard library.
 - For UI work, also run `make dev` and look at it.
 - Commit and push every change to GitHub (`origin`) as soon as `make check` passes. Stage only the files you changed; leave other people's uncommitted work alone.
+- **Log AI decisions in `HISTORY.md`, in the same change.** Add an entry whenever the user rejects, overrides or corrects one of your suggestions; when you or the user catch an error in your output (wrong fact, bad citation, broken code you claimed worked); or when a human decision changes direction. Format: what the AI proposed → decision → why, quoting the user's reason where they gave one and writing *no reason recorded* otherwise. Record it honestly. Don't soften your errors or credit yourself with the user's ideas.
 - Commits are authored by the repo's git user (Nicholas Chan) only. Don't add `Co-Authored-By: Claude` or any other Claude or AI attribution, trailer or "Generated with" line to commit messages or PR descriptions.
